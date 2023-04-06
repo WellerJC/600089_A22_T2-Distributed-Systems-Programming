@@ -74,6 +74,15 @@ namespace DistSysAcwServer.DataAccess
             }
 
         }
+        public string ReturnUserName(string ApiKey)
+        {
+            using (var ctx = new UserContext())
+            {
+                var user = ctx.Users.FirstOrDefault(u => u.ApiKey == ApiKey);
+
+                return user.UserName;
+            }
+        }
         public void DeleteUser(string ApiKey)
         {
             using (var ctx = new UserContext())
@@ -85,6 +94,18 @@ namespace DistSysAcwServer.DataAccess
                     ctx.Users.Remove(user);
                     ctx.SaveChanges();
                 }
+            }
+        }
+
+        public void ChangeRole(string userName, string role)
+        {
+            using (var ctx = new UserContext())
+            {
+                var user = ctx.Users.FirstOrDefault(u => u.UserName == userName);
+
+                user.Role = role;
+
+                    ctx.SaveChanges();
             }
         }
     }

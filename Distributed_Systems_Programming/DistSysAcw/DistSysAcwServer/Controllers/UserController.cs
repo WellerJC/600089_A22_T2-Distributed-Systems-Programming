@@ -40,10 +40,10 @@ namespace DistSysAcwServer.Controllers
             if (userName == "") { return StatusCode(400, "Oops. Make sure your body contains a string with your username and your Content-Type is Content-Type:application/json"); }
             bool user = _myUserCRUDAccess.CheckUser(userName);
 
-            if (user == true) return StatusCode(403,"Oops. This username is already in use.Please try again with a new username.");
-            else if (user == false) return StatusCode(200,_myUserCRUDAccess.Create(userName)) ;
             
-            return StatusCode(200,"Oopsy");
+            if (user == false) return StatusCode(200,_myUserCRUDAccess.Create(userName)) ;
+            else return StatusCode(403, "Oops. This username is already in use.Please try again with a new username.");
+
         }
 
         [HttpDelete("removeuser")]
@@ -55,18 +55,27 @@ namespace DistSysAcwServer.Controllers
             if(_myUserCRUDAccess.CheckApi(apiKey) == true)
               {
                   if (_myUserCRUDAccess.CheckApiUser(apiKey, userName) == true) {  _myUserCRUDAccess.DeleteUser(apiKey);  return StatusCode(200, true); }
-                  else {  return StatusCode(200, false); }
+                  else   return StatusCode(200, false); 
              }
-             else { return StatusCode(200, false); }
+             else  return StatusCode(200, false); 
              
             
         }
 
         [HttpPost("changerole")]
         [Authorize(Roles = "Admin")]
-        public IActionResult ChangeRole([FromHeader] string apiKey, [FromBody] string username)
+        public IActionResult ChangeRole([FromBody] string body)
         {
-            return StatusCode(200, true);
+            string apiKey = HttpContext.Request.Headers["Api-Key"].FirstOrDefault();
+            string[] bodyArray = body.Split(' ');
+            string username = bodyArray[1].Replace(",", ""); string role = bodyArray[3];
+
+            if (_myUserCRUDAccess.CheckUser(username) == true) {
+                if (role == "Admin" || role == "User") {  _myUserCRUDAccess.ChangeRole(username, role); return StatusCode(200, "DONE"); }
+                
+                return StatusCode(400, "NOT DONE: Role does not exist");
+            }
+            else return StatusCode(400, "NOT DONE: Username does not exist");  
         }
     } 
 }

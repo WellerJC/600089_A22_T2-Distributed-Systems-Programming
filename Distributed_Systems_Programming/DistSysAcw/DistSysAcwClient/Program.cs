@@ -19,7 +19,10 @@ static async Task RunAsync(HttpClient client)
     client.BaseAddress = new Uri("https://localhost:44394/api/");
     //client.BaseAddress = new Uri("http://150.237.94.9/2804877/api/");
     Console.WriteLine("Hello. What would you like to do?");
-    
+    bool emptyFile = CheckTextFile("userdetails.txt");
+    string[] userInfo = LoadDataFromFile("userdetails.txt"); string username = userInfo[0]; string apiKey = userInfo[1];
+    client.DefaultRequestHeaders.Add("Api-Key", apiKey);
+
     string input = Console.ReadLine();   
     
     while (true)
@@ -117,6 +120,8 @@ static async Task RunAsync(HttpClient client)
                                         {
                                             writetext.WriteLine("Username: " + inputArray[2] + " ApiKey: " + responseString);
                                         }
+                                        username = ""; apiKey = "";
+                                        username= inputArray[2]; apiKey = responseString;
                                     }
                                     else if(response.StatusCode != System.Net.HttpStatusCode.OK){ Console.WriteLine(responseString); }
                                     break;
@@ -128,19 +133,17 @@ static async Task RunAsync(HttpClient client)
                                     {
                                         writetext.WriteLine("Username: " + inputArray[2] + " ApiKey: " + inputArray[3]);
                                     }
-                                    
+                                    username = ""; apiKey = "";
+                                    username = inputArray[2]; apiKey = inputArray[3];
                                     Console.WriteLine("Stored");
 
                                     break;
                                 }
                             case "Delete":
                                 {
-                                    bool emptyFile = CheckTextFile("userdetails.txt");
+                                   
                                     if (emptyFile == true) { Console.WriteLine("You need to do a User Post or User Set First"); break; }
-                                    string[] userInfo = LoadDataFromFile("userdetails.txt"); string username = userInfo[0]; string apiKey = userInfo[1];   
-                                    
-                                    apiKey = apiKey.Replace("\r\n", "");  client.DefaultRequestHeaders.Add("Api-Key", apiKey);
-
+                                   
                                     string responseBool = ""; HttpResponseMessage response = await client.DeleteAsync($"user/removeuser?username={username}");
                                     responseBool = await response.Content.ReadAsStringAsync();
 
@@ -151,12 +154,13 @@ static async Task RunAsync(HttpClient client)
                                 }
                             case "Role":
                                 {
-                                    bool emptyFile = CheckTextFile("userdetails.txt");
+                                    
                                     if (emptyFile == true) { Console.WriteLine("You need to do a User Post or User Set First"); break; }
-                                    string[] userInfo = LoadDataFromFile("userdetails.txt"); string username = userInfo[0]; string apiKey = userInfo[1];
 
-                                    apiKey = apiKey.Replace("\r\n", ""); client.DefaultRequestHeaders.Add("Api-Key", apiKey);
+                                    HttpResponseMessage response = await client.PostAsJsonAsync($"user/changerole", $"username: {inputArray[2]}, role: {inputArray[3]}");
+                                    string responseString = await response.Content.ReadAsStringAsync(); 
 
+                                    Console.WriteLine(responseString);
                                     break;
                                 }
                         }
@@ -172,16 +176,61 @@ static async Task RunAsync(HttpClient client)
                         {
                             case "Hello":
                                 {
+                                    
+                                    if (emptyFile == true) { Console.WriteLine("You need to do a User Post or User Set First"); break; }
+                                    
+                                    Task<string> task = GetStringAsync("protected/hello", client);
+                                    if (await Task.WhenAny(task, Task.Delay(20000)) == task)
+                                    {
+                                        Console.WriteLine(task.Result);
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine("Request Timed Out");
+                                    }
                                     break;
                                 }
                             case "SHA1":
                                 {
+                                   
+                                    if (emptyFile == true) { Console.WriteLine("You need to do a User Post or User Set First"); break; }
+                                    
+                                    Task<string> task = GetStringAsync($"protected/sha1?message={inputArray[2]}", client);
+
+                                    if (await Task.WhenAny(task, Task.Delay(20000)) == task)
+                                    {
+                                        Console.WriteLine(task.Result);
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine("Request Timed Out");
+                                    }
                                     break;
+                                    
                                 }
                             case "SHA256":
                                 {
+                                    
+                                    if (emptyFile == true) { Console.WriteLine("You need to do a User Post or User Set First"); break; }
+                                    
+                                    Task<string> task = GetStringAsync($"protected/sha256?message={inputArray[2]}", client);
+
+                                    if (await Task.WhenAny(task, Task.Delay(20000)) == task)
+                                    {
+                                        Console.WriteLine(task.Result);
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine("Request Timed Out");
+                                    }
                                     break;
                                 }
+                            case "Get":
+                                break;
+                            case "Sign":
+                                break;
+                            case "AddFifty":
+                                break;
                         }
                         break;
                     }
@@ -196,7 +245,7 @@ static async Task RunAsync(HttpClient client)
 
         Console.WriteLine("What would you like to do next?");
         input = Console.ReadLine();
-        Console.Clear();
+            Console.Clear();
     }
     
 }
@@ -208,6 +257,8 @@ static async Task<string> GetStringAsync(string path, HttpClient client)
     responsestring = await response.Content.ReadAsStringAsync();
     return responsestring;
 }
+
+
 
 static bool CheckTextFile(string filename)
 {
